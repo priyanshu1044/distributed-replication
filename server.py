@@ -11,10 +11,11 @@ from collections import deque
 class ReplicationServicer(replication_pb2_grpc.ReplicationServicer):
     def __init__(self, server_id, ip_address):
         self.server_id = f"{ip_address}:{server_id.split(':')[1]}"
-        self.data_store = {}  # Key-value store for data
+        self.data_store = {}  # Key-value
         self.lock = threading.Lock()
         self.load = 0  # Track the number of tasks being processed
-        # Initialize server metrics with all 5 peer addresses
+
+        # Initialize 5 server
         self.server_metrics = {
             "127.0.0.1:50051": 0,
             "127.0.0.1:50052": 0,
@@ -104,7 +105,7 @@ class ReplicationServicer(replication_pb2_grpc.ReplicationServicer):
                     return replication_pb2.ReadResponse(status="Failed: Key not found")
                 responses = []
 
-        # 2) peer reads for original requests until R=2 fulfilled
+        # Step 2 - (Generated with help from ChatGPT) – query peer replicas until two successful reads satisfy the quorum (R = 2). 
         if not is_forwarded:
             peers = [p for p in self.server_metrics.keys() if p != self.server_id]
             random.shuffle(peers)
@@ -120,7 +121,7 @@ class ReplicationServicer(replication_pb2_grpc.ReplicationServicer):
                             print(f"Read: got from peer {peer}: {resp.data}")
                 except grpc.RpcError as e:
                     print(f"Read: peer {peer} error {e}")
-        # Enforce R>=2 quorum
+        # Enforce R>=2 quorum  
         if len(responses) >= 2:
             best = max(responses, key=lambda r: r['timestamp'])
             print(f"Read: returning latest {request.key} -> {best['data']}")
@@ -223,6 +224,7 @@ class ReplicationServicer(replication_pb2_grpc.ReplicationServicer):
             print(f"Received load update from {request.server_id}: {request.load}")
         return replication_pb2.LoadResponse(status="Success")
 
+    # (Generated with help from ChatGPT)
     def process_hints(self):
         """Background thread: retry hinted writes to peers that were previously unreachable."""
         while True:
